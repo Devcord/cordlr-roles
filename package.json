@@ -1,0 +1,27 @@
+{
+  "name": "cordlr-roles",
+  "version": "1.0.0",
+  "description": "Cordlr Role Management Plugin",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Devcord/cordlr-roles.git"
+  },
+  "keywords": [
+    "cordlr",
+    "roles",
+    "plugin"
+  ],
+  "author": "Devcord",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Devcord/cordlr-roles/issues"
+  },
+  "homepage": "https://github.com/Devcord/cordlr-roles#readme",
+  "dependencies": {
+    "cordlr-plugin": "0.0.5"
+  }
+}
