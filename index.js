@@ -49,24 +49,13 @@ module.exports = class RolesPlugin extends CordlrPlugin {
     }
   }
 
-  // I dont know any other way to get the bot roles and
-  // then check if it has the correct permissions. 
-  // This piece of code need to be Reviewed and Improved if possible!
   checkPermissions () {
-    // ALL THIS IS TEMPORARY!
-    // Until we can get a helper function in the Cordlr-plugin!
     this.bot.on('ready', () => {
-      for (const k of this.bot.guilds.array ()) {
-        const botPermissions = k.members.get(this.bot.user.id)
+      const admin = this.checkBotPermission('ADMINISTRATOR')
+      const manageRoles = this.checkBotPermission('MANAGE_ROLES_OR_PERMISSIONS')
 
-        const admin = botPermissions.hasPermission ('ADMINISTRATOR')
-        const manageRoles = botPermissions.hasPermission ('MANAGE_ROLES_OR_PERMISSIONS')
-
-        if (admin || manageRoles) {
-          return this.hasPermission = true
-        }
-
-        break
+      if (admin || manageRoles) {
+        return this.hasPermission = true
       }
 
       this.bot.emit('error', new Error('Bot has no permissions to handle roles, please give it the "Manage Roles" and/or "Administrator" permissions and then restart bot!'))
@@ -76,20 +65,20 @@ module.exports = class RolesPlugin extends CordlrPlugin {
 
   addRole (message, args, flags) {
     if (this.hasPermission) {
-      const roles = this.parseArguments (message, args)
-      return this.roleHandler (message, roles, 'add')
+      const roles = this.parseArguments(message, args)
+      return this.roleHandler(message, roles, 'add')
     }
 
-    this.botDontHavePermission (message)
+    this.botDontHavePermission(message)
   }
 
   removeRole (message, args, flags) {
     if (this.hasPermission) {
-      const roles = this.parseArguments (message, args)
-      return this.roleHandler (message, roles, 'remove')
+      const roles = this.parseArguments(message, args)
+      return this.roleHandler(message, roles, 'remove')
     }
     
-    this.botDontHavePermission (message)
+    this.botDontHavePermission(message)
   }
 
   parseArguments (message, args) {
@@ -101,16 +90,16 @@ module.exports = class RolesPlugin extends CordlrPlugin {
       fields: []
     }
 
-    const serverRoles = this.getRoles (message)
+    const serverRoles = this.getRoles(message)
 
     for (let roleName of args) {
       let exist = false
       let alreadyHas = false
 
       for (const serverRole of serverRoles) {
-        if (serverRole[1].name.toLowerCase () === roleName.toLowerCase ()) {
+        if (serverRole[1].name.toLowerCase() === roleName.toLowerCase()) {
 
-          const userAlreadyHave = message.member.roles.has (serverRole[1].id)
+          const userAlreadyHave = message.member.roles.has(serverRole[1].id)
           if (userAlreadyHave) {
             roles.userAlreadyHave.push(serverRole[1].name)
             alreadyHas = true
@@ -138,7 +127,7 @@ module.exports = class RolesPlugin extends CordlrPlugin {
 
       for (const role of roles.exist) {
         for (const whitelistRole of this.roleConfig.whitelist) {
-          if (role.name.toLowerCase () === whitelistRole.toLowerCase ()) {
+          if (role.name.toLowerCase() === whitelistRole.toLowerCase()) {
             allRoles.push(role.name)
           }
         }
@@ -147,18 +136,18 @@ module.exports = class RolesPlugin extends CordlrPlugin {
           roles.notAvailable.push(role.name)
         }
 
-        if (type === 'add' && !message.member.roles.has (role.id)) {
-          message.member.addRole (role)
+        if (type === 'add' && !message.member.roles.has(role.id)) {
+          message.member.addRole(role)
           successPrint = true
         }
 
-        else if (type === 'remove' && message.member.roles.has (role.id)) {
-          message.member.removeRole (role)
+        else if (type === 'remove' && message.member.roles.has(role.id)) {
+          message.member.removeRole(role)
           successPrint = true
         }
 
         else {
-          const i = allRoles.indexOf (role.name)
+          const i = allRoles.indexOf(role.name)
           allRoles.splice(i, 1)
           alreadyHas = true
 
@@ -169,23 +158,23 @@ module.exports = class RolesPlugin extends CordlrPlugin {
       }
 
       if (successPrint) {
-        this.successPush (message, roles, allRoles, type)
+        this.successPush(message, roles, allRoles, type)
       }
 
       if (roles.notAvailable != false) {
-        this.notAvailablePush (roles)
+        this.notAvailablePush(roles)
       }
     }
 
     if (roles.userAlreadyHave != false && alreadyHas) {
-      this.userAlreadyHavePush (roles, type)
+      this.userAlreadyHavePush(roles, type)
     }
 
     if (roles.dontExist != false) {
-      this.dontExistPush (roles)
+      this.dontExistPush(roles)
     }
 
-    return this.send (message, roles)
+    return this.send(message, roles)
   }
   
   dontExistPush (roles) {
@@ -247,14 +236,14 @@ module.exports = class RolesPlugin extends CordlrPlugin {
   }
 
   botDontHavePermission (message) {
-    return this.sendInfo (message, `${this.bot.user.username} dont have permission to handle roles, give it the "Manage Role" permission.`, 'No Manage Role Permission', this.footer)
+    return this.sendInfo(message, `${this.bot.user.username} dont have permission to handle roles, give it the "Manage Role" permission.`, 'No Manage Role Permission', this.footer)
   }
 
   send (message, roles) {
     // Green Color
     // const successColor = this.colorToDecimal('#36c17e')
 
-    return this.sendEmbed (message, {
+    return this.sendEmbed(message, {
       title: '', // 'Roles',
       description: '', // `${this.config.prefix}addrole <rolename> | ${this.config.prefix}removerole <rolename>`,
       url: '',
@@ -277,9 +266,9 @@ module.exports = class RolesPlugin extends CordlrPlugin {
           value: `${this.config.prefix}addrole ${role} | ${this.config.prefix}removerole ${role}`
         })
       }
-      return this.sendFields (message, fields, null, this.footer)
+      return this.sendFields(message, fields, null, this.footer)
     } else {
-      return this.sendInfo (message, 'Their are no roles whitelisted yet. Tell your admin!', 'No Roles', this.footer)
+      return this.sendInfo(message, 'Their are no roles whitelisted yet. Tell your admin!', 'No Roles', this.footer)
     }
   }
 }
