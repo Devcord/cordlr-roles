@@ -2,7 +2,7 @@ const CordlrPlugin = require('cordlr-plugin')
 
 module.exports = class RolesPlugin extends CordlrPlugin {
   constructor (bot, config) {
-    super (bot, config)
+    super(bot, config)
 
     this.name = 'Roles'
     this.description = 'Role Management for administrators and users'
@@ -28,14 +28,14 @@ module.exports = class RolesPlugin extends CordlrPlugin {
       }
     }
 
-    this.footer = this.embedFooter ('Cordlr Role Plugin')
+    this.footer = this.embedFooter('Cordlr Role Plugin')
 
     // Will only check permissions ONCE when bot is initiated!
     // This means if someone change the bots permissions
     // while it is live this piece of code will NOT know about it.
-    this.hasPermission = this.checkPermissions ()
+    this.hasPermission = this.checkPermissions()
 
-    this.resolveConfiguration ()
+    this.resolveConfiguration()
   }
 
   resolveConfiguration () {
@@ -55,11 +55,12 @@ module.exports = class RolesPlugin extends CordlrPlugin {
       const manageRoles = this.checkBotPermission('MANAGE_ROLES_OR_PERMISSIONS')
 
       if (admin || manageRoles) {
-        return this.hasPermission = true
+        this.hasPermission = true
+        return
       }
 
       this.bot.emit('error', new Error('Bot has no permissions to handle roles, please give it the "Manage Roles" and/or "Administrator" permissions and then restart bot!'))
-      return this.hasPermission = false
+      this.hasPermission = false
     })
   }
 
@@ -77,7 +78,7 @@ module.exports = class RolesPlugin extends CordlrPlugin {
       const roles = this.parseArguments(message, args)
       return this.roleHandler(message, roles, 'remove')
     }
-    
+
     this.botDontHavePermission(message)
   }
 
@@ -98,10 +99,8 @@ module.exports = class RolesPlugin extends CordlrPlugin {
 
       for (const serverRole of serverRoles) {
         if (serverRole[1].name.toLowerCase() === roleName.toLowerCase()) {
-
           const userAlreadyHave = message.member.roles.has(serverRole[1].id)
           if (userAlreadyHave) {
-            roles.userAlreadyHave.push(serverRole[1].name)
             alreadyHas = true
           }
 
@@ -119,64 +118,56 @@ module.exports = class RolesPlugin extends CordlrPlugin {
   }
 
   roleHandler (message, roles, type) {
-    let alreadyHas = false
+    if (roles.exist.length > 0) {
+      let alreadyHas = false
 
-    if (roles.exist != false) {
-      const allRoles = []
-      let successPrint = false
+      const allRoles = roles.exist.filter((role) => {
+        alreadyHas = false
 
-      for (const role of roles.exist) {
-        for (const whitelistRole of this.roleConfig.whitelist) {
-          if (role.name.toLowerCase() === whitelistRole.toLowerCase()) {
-            allRoles.push(role.name)
-          }
-        }
+        const tmpWhitelist = this.roleConfig.whitelist.map((tmpRole) => {
+          return tmpRole.toLowerCase()
+        })
 
-        if (!role.name in allRoles) {
-          roles.notAvailable.push(role.name)
-        }
-
-        if (type === 'add' && !message.member.roles.has(role.id)) {
-          message.member.addRole(role)
-          successPrint = true
-        }
-
-        else if (type === 'remove' && message.member.roles.has(role.id)) {
-          message.member.removeRole(role)
-          successPrint = true
-        }
-
-        else {
-          const i = allRoles.indexOf(role.name)
-          allRoles.splice(i, 1)
-          alreadyHas = true
-
-          if (type === 'remove') {
+        if (tmpWhitelist.includes(role.name.toLowerCase())) {
+          if (type === 'add' && !message.member.roles.has(role.id)) {
+            message.member.addRole(role)
+          } else if (type === 'remove' && message.member.roles.has(role.id)) {
+            message.member.removeRole(role)
+          } else {
+            alreadyHas = true
             roles.userAlreadyHave.push(role.name)
           }
+
+          if (!alreadyHas) {
+            return role
+          }
+        } else {
+          roles.notAvailable.push(role.name)
+        }
+      })
+
+      if (!alreadyHas) {
+        if (allRoles.length > 0) {
+          this.successPush(message, roles, allRoles, type)
         }
       }
 
-      if (successPrint) {
-        this.successPush(message, roles, allRoles, type)
-      }
-
-      if (roles.notAvailable != false) {
+      if (roles.notAvailable.length > 0) {
         this.notAvailablePush(roles)
       }
     }
 
-    if (roles.userAlreadyHave != false && alreadyHas) {
+    if (roles.userAlreadyHave.length > 0) {
       this.userAlreadyHavePush(roles, type)
     }
 
-    if (roles.dontExist != false) {
+    if (roles.dontExist.length > 0) {
       this.dontExistPush(roles)
     }
 
     return this.send(message, roles)
   }
-  
+
   dontExistPush (roles) {
     roles.fields.push({
       name: 'Error',
@@ -192,9 +183,7 @@ module.exports = class RolesPlugin extends CordlrPlugin {
     if (type === 'add') {
       name = 'Not added'
       value = `You already have the role(s) ${roles.userAlreadyHave.join(', ')}.`
-    }
-
-    else if (type === 'remove') {
+    } else if (type === 'remove') {
       name = 'Not removed'
       value = `You cant remove role(s) you dont have: ${roles.userAlreadyHave.join(', ')}.`
     }
@@ -218,12 +207,14 @@ module.exports = class RolesPlugin extends CordlrPlugin {
     let name = ''
     let value = ''
 
+    allRoles = allRoles.map((role) => {
+      return role.name
+    })
+
     if (type === 'add') {
       name = 'Role added'
       value = `The role(s) ${allRoles.join(', ')} was added to ${message.author.username}.`
-    }
-
-    else if (type === 'remove') {
+    } else if (type === 'remove') {
       name = 'Role removed'
       value = `The role(s) ${allRoles.join(', ')} was removed from ${message.author.username}.`
     }
