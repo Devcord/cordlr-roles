@@ -33,7 +33,8 @@ module.exports = class RolesPlugin extends CordlrPlugin {
     // Will only check permissions ONCE when bot is initiated!
     // This means if someone change the bots permissions
     // while it is live this piece of code will NOT know about it.
-    this.hasPermission = this.checkPermissions()
+    // this.hasPermission = this.checkPermissions()
+    this.hasPermission = true
 
     this.resolveConfiguration()
   }
@@ -49,6 +50,7 @@ module.exports = class RolesPlugin extends CordlrPlugin {
     }
   }
 
+  // TODO: Does not work with multiple servers
   checkPermissions () {
     this.bot.on('ready', () => {
       const admin = this.checkBotPermission('ADMINISTRATOR')
@@ -83,6 +85,13 @@ module.exports = class RolesPlugin extends CordlrPlugin {
   }
 
   parseArguments (message, args) {
+    args = args.map((arg) => {
+      if (arg[0] === '"' || arg[arg.length - 1] === '"') {
+        arg = arg.replace(/"/g, '')
+      }
+      return arg
+    })
+
     const roles = {
       exist: [],
       dontExist: [],
@@ -94,23 +103,25 @@ module.exports = class RolesPlugin extends CordlrPlugin {
     const serverRoles = this.getRoles(message)
 
     for (let roleName of args) {
-      let exist = false
-      let alreadyHas = false
+      if (roleName) {
+        let exist = false
+        let alreadyHas = false
 
-      for (const serverRole of serverRoles) {
-        if (serverRole[1].name.toLowerCase() === roleName.toLowerCase()) {
-          const userAlreadyHave = message.member.roles.has(serverRole[1].id)
-          if (userAlreadyHave) {
-            alreadyHas = true
+        for (const serverRole of serverRoles) {
+          if (serverRole[1].name.toLowerCase() === roleName.toLowerCase()) {
+            const userAlreadyHave = message.member.roles.has(serverRole[1].id)
+            if (userAlreadyHave) {
+              alreadyHas = true
+            }
+
+            roles.exist.push(serverRole[1])
+            exist = true
           }
-
-          roles.exist.push(serverRole[1])
-          exist = true
         }
-      }
 
-      if (!exist && !alreadyHas) {
-        roles.dontExist.push(roleName)
+        if (!exist && !alreadyHas) {
+          roles.dontExist.push(roleName)
+        }
       }
     }
 
