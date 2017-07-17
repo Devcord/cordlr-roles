@@ -6,7 +6,7 @@
 
 Allows users to manually join certain, whitelisted roles via `!addrole`, `!removerole` and `!roles`
 
-Used with [Cordlr-cli](https://github.com/Devcord/cordlr-cli) and [Cordlr-loader](https://github.com/Devcord/cordlr-loader). Check out the [boilerplate](https://github.com/Devcord/cordlr-server-boilerplate) to get started!
+Used with [Cordlr-cli](https://github.com/Devcord/cordlr-cli). Check out the [boilerplate](https://github.com/Devcord/cordlr-server-boilerplate) to get started!
 
 ## Usage [Read More](https://github.com/Devcord/cordlr-server-boilerplate)
 
